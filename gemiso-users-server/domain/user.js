@@ -78,12 +78,23 @@ router.put("/:id", validateUser, (req, res) => {
   if (userIndex === -1)
     return res.status(404).json({ error: "User not found." });
 
+  const existingUser = global.users[userIndex];
   const { name, email } = req.body;
+
+  if (
+    name &&
+    existingUser.name === name &&
+    email &&
+    existingUser.email === email
+  ) {
+    return res.status(400).json({ error: "No new information to update." });
+  }
+
   if (name) global.users[userIndex].name = name;
   if (email) global.users[userIndex].email = email;
+
   res.status(200).json(global.users[userIndex]);
 });
-
 /** 사용자 삭제 */
 router.delete("/:id", (req, res) => {
   const userIndex = global.users.findIndex(
