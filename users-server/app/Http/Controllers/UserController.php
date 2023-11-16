@@ -1,76 +1,47 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    private $users = [
-        [
-            "id" => 1,
-            "name" => "User1",
-            "email" => "user1@example.com",
-        ],
-        [
-            "id" => 2,
-            "name" => "User2",
-            "email" => "user2@example.com",
-        ]
-    ];
-
-    public function index()
+    public function read()
     {
-        return response()->json($this->users);
-    }
-
-    public function read($id)
-    {
-        $user = collect($this->users)->firstWhere('id', $id);
-
-        if (!$user) {
-            return response()->json(['error' => 'User not found.'], 404);
-        }
-
-        return response()->json($user);
+        $users = User::all();
+        return response()->json($users);
     }
 
     public function create(Request $request)
     {
-      $newUser = [
-        'id' => count($this->users) + 1,
-        'name' => $request->name,
-        'email' => $request->email,
-    ];
-
-    $this->users[] = $newUser;
-
-    return response()->json($newUser, 201);
+        $user = User::create($request->only(['name', 'email']));
+        return response()->json($user, 201);
     }
 
     public function update(Request $request, $id)
     {
-      $userIndex = array_search($id, array_column($this->users, 'id'));
+        $user = User::find($id);
+        if (!$user) {
+            return $this->userNotFoundResponse();
+        }
 
-      if ($userIndex === false) {
-          return response()->json(['error' => 'User not found.'], 404);
-      }
-
-      $this->users[$userIndex]['name'] = $request->name ?? $this->users[$userIndex]['name'];
-      $this->users[$userIndex]['email'] = $request->email ?? $this->users[$userIndex]['email'];
-
-      return response()->json($this->users[$userIndex]);
+        $user->update($request->only(['name', 'email']));
+        return response()->json($user);
     }
 
     public function delete($id)
     {
-      $userIndex = array_search($id, array_column($this->users, 'id'));
+        $user = User::find($id);
+        if (!$user) {
+            return $this->userNotFoundResponse();
+        }
 
-      if ($userIndex === false) {
-          return response()->json(['error' => 'User not found.'], 404);
-      }
+        $user->delete();
+        return response()->json(null, 204);
+    }
 
-      unset($this->users[$userIndex]);
-
-      return response()->json(null, 204);
+    private function userNotFoundResponse()
+    {
+        return response()->json(['error' => 'User not found.'], 404);
     }
 }
