@@ -131,13 +131,9 @@ router.delete("/permissions", (req, res) => {
     .map((permission) => permission.name);
 
   global.users.forEach((user) => {
-    const filteredPermissions = [];
-    for (let permission of user.permissions) {
-      if (!validPermissionNames.includes(permission)) {
-        filteredPermissions.push(permission);
-      }
-    }
-    user.permissions = filteredPermissions;
+    user.permissions = user.permissions.filter(
+      (permission) => !validPermissionNames.includes(permission),
+    );
   });
 
   res
