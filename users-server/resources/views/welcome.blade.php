@@ -5,7 +5,9 @@
 </head>
 <body>
     <div id="app">
-        <UserComponent/>
+        <user-component/>
     </div>
+
+    @vite('resources/js/app.js')
 </body>
 </html>

@@ -1,40 +1,69 @@
 <template>
     <div>
-        <h1>Users</h1>
-        <ul>
-            <li v-for="user in users" :key="user.id">
-                {{ user.name }} - {{ user.email }}
-                <button @click="deleteUser(user.id)">Delete</button>
-                <button @click="selectUser(user)">Edit</button>
-            </li>
-        </ul>
-
-        <div>
-            <input v-model="userForm.name" placeholder="Name" />
-            <input v-model="userForm.email" placeholder="Email" />
-            <button @click="createUser">Add User</button>
-            <button v-if="editing" @click="updateUser">Update User</button>
+        <h1>User List</h1>
+        <button @click="toggleCreateForm" class="toggle-button">
+            Create User
+        </button>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="user in users" :key="user.id">
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        <button
+                            @click="prepareUpdate(user)"
+                            class="toggle-button"
+                        >
+                            Update
+                        </button>
+                        <button
+                            @click="deleteUser(user.id)"
+                            class="toggle-button"
+                        >
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div v-if="isCreateVisible">
+            <CreateUser @user-created="handleUserCreated" />
+        </div>
+        <div v-if="isUpdateVisible">
+            <UpdateUser
+                :user="selectedUser"
+                @user-updated="handleUserUpdated"
+            />
         </div>
     </div>
 </template>
 
 <script>
 import axios from "axios";
+import CreateUser from "./CreatUser.vue";
+import UpdateUser from "./UpdateUser.vue";
 
 export default {
+    components: {
+        CreateUser,
+        UpdateUser,
+    },
     data() {
         return {
             users: [],
-            userForm: {
-                name: "",
-                email: "",
-            },
-            editing: false,
-            selectedUserId: null,
+            isCreateVisible: false,
+            isUpdateVisible: false,
+            selectedUser: null,
         };
-    },
-    mounted() {
-        this.loadUsers();
     },
     methods: {
         loadUsers() {
@@ -47,40 +76,24 @@ export default {
                     console.error("Error loading users:", error);
                 });
         },
-        createUser() {
-            axios
-                .post("/api/users", this.userForm)
-                .then(() => {
-                    this.loadUsers();
-                    this.userForm.name = "";
-                    this.userForm.email = "";
-                })
-                .catch((error) => {
-                    console.error("Error creating user:", error);
-                });
+        toggleCreateForm() {
+            this.isCreateVisible = !this.isCreateVisible;
         },
-        selectUser(user) {
-            this.editing = true;
-            this.selectedUserId = user.id;
-            this.userForm.name = user.name;
-            this.userForm.email = user.email;
+        prepareUpdate(user) {
+            this.selectedUser = user;
+            this.isUpdateVisible = true;
         },
-        updateUser() {
-            axios
-                .put(`/api/users/${this.selectedUserId}`, this.userForm)
-                .then(() => {
-                    this.loadUsers();
-                    this.editing = false;
-                    this.userForm.name = "";
-                    this.userForm.email = "";
-                })
-                .catch((error) => {
-                    console.error("Error updating user:", error);
-                });
+        handleUserCreated() {
+            this.loadUsers();
+            this.isCreateVisible = false;
         },
-        deleteUser(id) {
+        handleUserUpdated() {
+            this.loadUsers();
+            this.isUpdateVisible = false;
+        },
+        deleteUser(userId) {
             axios
-                .delete(`/api/users/${id}`)
+                .delete(`/api/users/${userId}`)
                 .then(() => {
                     this.loadUsers();
                 })
@@ -89,5 +102,120 @@ export default {
                 });
         },
     },
+    mounted() {
+        this.loadUsers();
+    },
 };
 </script>
+<style>
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    border: 1px solid #ddd;
+    text-align: left;
+    padding: 8px;
+}
+
+th {
+    background-color: #f3f3f3;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #ddd;
+}
+
+.toggle-button {
+    padding: 10px 20px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    outline: none;
+    margin-bottom: 10px;
+    margin-right: 10px;
+}
+
+.toggle-button:hover {
+    background-color: #45a049;
+}
+
+.form-container {
+    position: relative;
+    width: 45%;
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.user-form {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    grid-gap: 10px;
+    align-items: center;
+}
+
+.form-field {
+    display: contents;
+}
+
+label {
+    text-align: right;
+    padding-right: 10px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.submit-button {
+    grid-column: 1 / span 2;
+    padding: 10px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.submit-button:hover {
+    background-color: #45a049;
+}
+
+.error-input {
+    border-color: red;
+}
+
+.error-message {
+    color: red;
+    margin-top: 5px;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.close-button:hover {
+    color: #888;
+}
+</style>
