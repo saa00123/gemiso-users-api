@@ -1,41 +1,62 @@
 <template>
     <div class="form-container">
+        <button class="close-button" @click="closeForm">✖</button>
         <h1>Create User</h1>
         <form @submit.prevent="createUser">
-            <label for="name">Name:</label>
-            <input v-model="newUser.name" type="text" id="name" />
-            <label for="email">Email:</label>
-            <input v-model="newUser.email" type="email" id="email" />
-            <!-- Other fields if needed -->
+            <div class="form-field">
+                <label for="name">Name:</label>
+                <input
+                    v-model="newUser.name"
+                    type="text"
+                    id="name"
+                    placeholder="Name"
+                />
+            </div>
+            <div class="form-field">
+                <label for="email">Email:</label>
+                <input
+                    v-model="newUser.email"
+                    type="email"
+                    id="email"
+                    placeholder="Email"
+                />
+            </div>
             <button type="submit" class="submit-button">Submit</button>
         </form>
     </div>
 </template>
 
 <script>
+import { ref } from "vue";
 import axios from "axios";
 
 export default {
-    data() {
-        return {
-            newUser: {
-                name: "",
-                email: "",
-                // Other fields if needed
-            },
+    emits: ["close-form"],
+    setup(props, { emit }) {
+        const newUser = ref({
+            name: "",
+            email: "",
+        });
+
+        const createUser = async () => {
+            try {
+                await axios.post("/api/users", newUser.value);
+                newUser.value = { name: "", email: "" };
+                emit("user-created");
+            } catch (error) {
+                console.error("Error creating user:", error);
+            }
         };
-    },
-    methods: {
-        createUser() {
-            axios
-                .post("/api/users", this.newUser)
-                .then(() => {
-                    this.$emit("user-created");
-                })
-                .catch((error) => {
-                    console.error("Error creating user:", error);
-                });
-        },
+
+        const closeForm = () => {
+            emit("close-form");
+        };
+
+        return {
+            newUser,
+            createUser,
+            closeForm,
+        };
     },
 };
 </script>
@@ -52,10 +73,9 @@ export default {
 }
 
 .user-form {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    grid-gap: 10px;
-    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .form-field {
@@ -68,11 +88,11 @@ label {
 }
 
 input[type="text"],
-input[type="email"],
-input[type="password"] {
+input[type="email"] {
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    width: 80%;
 }
 
 .submit-button {

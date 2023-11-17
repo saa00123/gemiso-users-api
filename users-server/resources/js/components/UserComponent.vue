@@ -48,6 +48,7 @@
 </template>
 
 <script>
+import { ref, onMounted } from "vue";
 import axios from "axios";
 import CreateUser from "./CreatUser.vue";
 import UpdateUser from "./UpdateUser.vue";
@@ -57,56 +58,67 @@ export default {
         CreateUser,
         UpdateUser,
     },
-    data() {
-        return {
-            users: [],
-            isCreateVisible: false,
-            isUpdateVisible: false,
-            selectedUser: null,
+    setup() {
+        const users = ref([]);
+        const isCreateVisible = ref(false);
+        const isUpdateVisible = ref(false);
+        const selectedUser = ref(null);
+
+        const loadUsers = async () => {
+            try {
+                const response = await axios.get("/api/users");
+                users.value = response.data;
+            } catch (error) {
+                console.error("Error loading users:", error);
+            }
         };
-    },
-    methods: {
-        loadUsers() {
-            axios
-                .get("/api/users")
-                .then((response) => {
-                    this.users = response.data;
-                })
-                .catch((error) => {
-                    console.error("Error loading users:", error);
-                });
-        },
-        toggleCreateForm() {
-            this.isCreateVisible = !this.isCreateVisible;
-        },
-        prepareUpdate(user) {
-            this.selectedUser = user;
-            this.isUpdateVisible = true;
-        },
-        handleUserCreated() {
-            this.loadUsers();
-            this.isCreateVisible = false;
-        },
-        handleUserUpdated() {
-            this.loadUsers();
-            this.isUpdateVisible = false;
-        },
-        deleteUser(userId) {
-            axios
-                .delete(`/api/users/${userId}`)
-                .then(() => {
-                    this.loadUsers();
-                })
-                .catch((error) => {
-                    console.error("Error deleting user:", error);
-                });
-        },
-    },
-    mounted() {
-        this.loadUsers();
+
+        const toggleCreateForm = () => {
+            isCreateVisible.value = !isCreateVisible.value;
+        };
+
+        const prepareUpdate = (user) => {
+            selectedUser.value = user;
+            isUpdateVisible.value = true;
+        };
+
+        const handleUserCreated = () => {
+            loadUsers();
+            isCreateVisible.value = false;
+        };
+
+        const handleUserUpdated = () => {
+            loadUsers();
+            isUpdateVisible.value = false;
+        };
+
+        const deleteUser = async (userId) => {
+            try {
+                await axios.delete(`/api/users/${userId}`);
+                loadUsers();
+            } catch (error) {
+                console.error("Error deleting user:", error);
+            }
+        };
+
+        onMounted(loadUsers);
+
+        return {
+            users,
+            isCreateVisible,
+            isUpdateVisible,
+            selectedUser,
+            loadUsers,
+            toggleCreateForm,
+            prepareUpdate,
+            handleUserCreated,
+            handleUserUpdated,
+            deleteUser,
+        };
     },
 };
 </script>
+
 <style>
 table {
     width: 100%;

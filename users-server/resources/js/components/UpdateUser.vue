@@ -2,39 +2,46 @@
     <div class="form-container">
         <h1>Update User</h1>
         <form @submit.prevent="updateUser">
-            <label for="name">Name:</label>
-            <input v-model="updatedUser.name" type="text" id="name" />
-            <label for="email">Email:</label>
+            <div class="form-field">
+                <label for="name">Name:</label>
+                <input v-model="updatedUser.name" type="text" id="name" />
+            </div>
+            <div class="form-field">
+                <label for="email">Email:</label>
+            </div>
             <input v-model="updatedUser.email" type="email" id="email" />
-            <!-- Other fields if needed -->
             <button type="submit" class="submit-button">Submit</button>
         </form>
     </div>
 </template>
 
 <script>
+import { ref } from "vue";
 import axios from "axios";
 
 export default {
     props: {
         user: Object,
     },
-    data() {
-        return {
-            updatedUser: { ...this.user },
+    setup(props, { emit }) {
+        const updatedUser = ref({ ...props.user });
+
+        const updateUser = async () => {
+            try {
+                await axios.put(
+                    `/api/users/${updatedUser.value.id}`,
+                    updatedUser.value
+                );
+                emit("user-updated");
+            } catch (error) {
+                console.error("Error updating user:", error);
+            }
         };
-    },
-    methods: {
-        updateUser() {
-            axios
-                .put(`/api/users/${this.updatedUser.id}`, this.updatedUser)
-                .then(() => {
-                    this.$emit("user-updated");
-                })
-                .catch((error) => {
-                    console.error("Error updating user:", error);
-                });
-        },
+
+        return {
+            updatedUser,
+            updateUser,
+        };
     },
 };
 </script>
@@ -51,10 +58,9 @@ export default {
 }
 
 .user-form {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    grid-gap: 10px;
-    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .form-field {
@@ -67,11 +73,11 @@ label {
 }
 
 input[type="text"],
-input[type="email"],
-input[type="password"] {
+input[type="email"] {
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    width: 80%;
 }
 
 .submit-button {
