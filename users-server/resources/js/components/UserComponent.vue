@@ -48,7 +48,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from "vue";
+import { toRefs, ref, onMounted, reactive } from "vue";
 import axios from "axios";
 import CreateUser from "./CreatUser.vue";
 import UpdateUser from "./UpdateUser.vue";
@@ -60,9 +60,12 @@ export default {
     },
     setup() {
         const users = ref([]);
-        const isCreateVisible = ref(false);
-        const isUpdateVisible = ref(false);
         const selectedUser = ref(null);
+
+        const status = reactive({
+            isCreateVisible: false,
+            isUpdateVisible: false,
+        });
 
         const loadUsers = async () => {
             try {
@@ -74,22 +77,22 @@ export default {
         };
 
         const toggleCreateForm = () => {
-            isCreateVisible.value = !isCreateVisible.value;
+            status.isCreateVisible = !status.isCreateVisible;
         };
 
         const prepareUpdate = (user) => {
             selectedUser.value = user;
-            isUpdateVisible.value = true;
+            status.isUpdateVisible = true;
         };
 
         const handleUserCreated = () => {
             loadUsers();
-            isCreateVisible.value = false;
+            status.isCreateVisible = false;
         };
 
         const handleUserUpdated = () => {
             loadUsers();
-            isUpdateVisible.value = false;
+            status.isUpdateVisible = false;
         };
 
         const deleteUser = async (userId) => {
@@ -105,8 +108,6 @@ export default {
 
         return {
             users,
-            isCreateVisible,
-            isUpdateVisible,
             selectedUser,
             loadUsers,
             toggleCreateForm,
@@ -114,6 +115,7 @@ export default {
             handleUserCreated,
             handleUserUpdated,
             deleteUser,
+            ...toRefs(status),
         };
     },
 };
